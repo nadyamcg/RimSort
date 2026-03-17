@@ -83,7 +83,11 @@ class ZipExtractThread(QThread):
                         return
 
                     filename = zip_info.filename
-                    dst = os.path.join(self.target_path, filename)
+                    dst = os.path.realpath(os.path.join(self.target_path, filename))
+                    real_target = os.path.realpath(self.target_path)
+                    if not (dst.startswith(real_target + os.sep) or dst == real_target):
+                        logger.warning(f"Zip slip detected, skipping entry: {filename}")
+                        continue
                     os.makedirs(os.path.dirname(dst), exist_ok=True)
 
                     if zip_info.is_dir():
