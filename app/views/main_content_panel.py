@@ -1105,7 +1105,7 @@ class MainContent(QObject):
                     self._do_steamworks_api_call_animated(
                         [
                             "subscribe",
-                            [eval(str_pfid) for str_pfid in filtered_publishedfileids],
+                            [int(str_pfid) for str_pfid in filtered_publishedfileids],
                         ]
                     )
                     # Notify user to redo Rentry Import
@@ -2773,7 +2773,7 @@ class MainContent(QObject):
                     self._do_steamworks_api_call_animated(
                         [
                             "subscribe",
-                            [eval(str_pfid) for str_pfid in self.db_builder.publishedfileids],
+                            [int(str_pfid) for str_pfid in self.db_builder.publishedfileids],
                         ]
                     )
 
