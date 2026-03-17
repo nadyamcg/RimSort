@@ -127,7 +127,7 @@ class CollectionImport:
                         steam_link = f"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}"
 
                         try:
-                            steam_response = requests.get(steam_link).text
+                            steam_response = requests.get(steam_link, timeout=15).text
                         except Exception as e:
                             logger.exception(e)
                             steam_response = ""
@@ -715,7 +715,7 @@ def ISteamRemoteStorage_GetCollectionDetails(
             count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
         try:  # Make a request to the Steam Web API
-            request = requests.post(url, data=data)
+            request = requests.post(url, data=data, timeout=15)
         except Exception as e:
             logger.warning(
                 f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
@@ -759,7 +759,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
             count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
         try:  # Make a request to the Steam Web API
-            request = requests.post(url, data=data)
+            request = requests.post(url, data=data, timeout=15)
         except Exception as e:
             logger.debug(
                 f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"

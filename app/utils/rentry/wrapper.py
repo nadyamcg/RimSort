@@ -2,6 +2,7 @@ import re
 import sys
 from json import loads as json_loads
 from typing import Any
+from urllib.parse import urlparse
 
 import requests
 from loguru import logger
@@ -196,7 +197,11 @@ class RentryImport:
         Returns:
             bool: True if the link is valid, False otherwise.
         """
-        return link.startswith(BASE_URL) or link.startswith(f"{BASE_URL}/raw")
+        try:
+            parsed = urlparse(link)
+            return parsed.scheme == "https" and parsed.hostname == "rentry.co"
+        except Exception:
+            return False
 
     def import_rentry_link(self) -> None:
         """
@@ -221,11 +226,11 @@ class RentryImport:
             if self.rentry_auth_code:
                 logger.debug("Using rentry-auth code to fetch rentry.co content.")
                 raw_url = rentry_link if rentry_link.endswith("/raw") else f"{rentry_link}/raw"
-                response = requests.get(raw_url, headers=_HEADERS)  # Fetch the content from the raw URL
+                response = requests.get(raw_url, headers=_HEADERS, timeout=15)  # Fetch the content from the raw URL
             else:
                 logger.debug("Fetching rentry.co content without rentry-auth.")
                 raw_url = rentry_link if rentry_link.endswith("/edit") else f"{rentry_link}/edit"
-                response = requests.get(raw_url)  # Fetch the content from the edit URL
+                response = requests.get(raw_url, timeout=15)  # Fetch the content from the edit URL
 
             if response.status_code == 200:
                 # Decode the content using UTF-8
