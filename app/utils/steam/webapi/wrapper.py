@@ -527,7 +527,7 @@ class DynamicQuery(QObject):
                                             f"Could not find pfid {child_pfid} in database. Adding child to missing_children"
                                         )
                                         missing_children.append(child_pfid)
-            except Exception as e:
+            except Exception:
                 stacktrace = traceback.format_exc()
                 # Redact any Steam API keys that may appear in URLs within the stacktrace
                 stacktrace = re.sub(r"([?&])key=[^&\s\"']+", r"\1key=[REDACTED]", stacktrace)

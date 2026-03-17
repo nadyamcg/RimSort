@@ -1,4 +1,8 @@
-from app.utils.obfuscate_message import _anonymize_path, _redact_secrets, obfuscate_message
+from app.utils.obfuscate_message import (
+    _anonymize_path,
+    _redact_secrets,
+    obfuscate_message,
+)
 
 
 def test__anonymize_path_windows_path_only() -> None:
