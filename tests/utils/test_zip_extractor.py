@@ -2,8 +2,6 @@ import os
 import zipfile
 from pathlib import Path
 
-import pytest
-
 
 def _create_zip_with_entries(zip_path: str, entries: dict[str, str]) -> None:
     """Create a ZIP file with the given filename->content entries."""
@@ -21,12 +19,16 @@ class TestZipSlipProtection:
         target = str(tmp_path / "output")
         os.makedirs(target)
 
-        _create_zip_with_entries(zip_path, {
-            "mod/About.xml": "<xml>test</xml>",
-            "mod/Defs/thing.xml": "<Def>data</Def>",
-        })
+        _create_zip_with_entries(
+            zip_path,
+            {
+                "mod/About.xml": "<xml>test</xml>",
+                "mod/Defs/thing.xml": "<Def>data</Def>",
+            },
+        )
 
         from app.utils.zip_extractor import ZipExtractThread
+
         thread = ZipExtractThread(zip_path, target)
         thread.run()  # Run synchronously for testing
 
@@ -39,13 +41,17 @@ class TestZipSlipProtection:
         target = str(tmp_path / "output")
         os.makedirs(target)
 
-        _create_zip_with_entries(zip_path, {
-            "safe/file.txt": "safe content",
-            "../../../etc/passwd": "malicious content",
-            "foo/../../escape.txt": "escaped content",
-        })
+        _create_zip_with_entries(
+            zip_path,
+            {
+                "safe/file.txt": "safe content",
+                "../../../etc/passwd": "malicious content",
+                "foo/../../escape.txt": "escaped content",
+            },
+        )
 
         from app.utils.zip_extractor import ZipExtractThread
+
         thread = ZipExtractThread(zip_path, target)
         thread.run()
 
@@ -61,12 +67,16 @@ class TestZipSlipProtection:
         target = str(tmp_path / "output")
         os.makedirs(target)
 
-        _create_zip_with_entries(zip_path, {
-            "normal.txt": "normal content",
-            "/tmp/evil.txt": "evil content",
-        })
+        _create_zip_with_entries(
+            zip_path,
+            {
+                "normal.txt": "normal content",
+                "/tmp/evil.txt": "evil content",
+            },
+        )
 
         from app.utils.zip_extractor import ZipExtractThread
+
         thread = ZipExtractThread(zip_path, target)
         thread.run()
 
