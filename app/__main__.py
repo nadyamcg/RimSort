@@ -25,6 +25,7 @@
 
 import os
 import platform
+import re
 import sys
 import traceback
 from logging import WARNING, getLogger
@@ -111,16 +112,10 @@ def main_thread() -> None:
         stacktrace: str = ""
         if isinstance(e, SystemExit):
             logger.warning("Exiting application")
-        elif (
-            e.__class__.__name__ == "HTTPError" or e.__class__.__name__ == "SSLError"
-        ):  # requests.exceptions.HTTPError OR urllib3.exceptions.SSLError
-            stacktrace = traceback.format_exc()
-            # If an HTTPError from steam/urllib3 module(s) somehow is uncaught,
-            # try to remove the Steam API key from the stacktrace
-            pattern = "&key="
-            stacktrace = stacktrace[: len(stacktrace) - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))]
         else:
             stacktrace = traceback.format_exc()
+            # Redact any Steam API keys that may appear in URLs within the stacktrace
+            stacktrace = re.sub(r"[?&]key=[^&\s\"']+", "key=[REDACTED]", stacktrace)
         logger.error("The main application instantiation has failed with an uncaught exception:")
         logger.error(stacktrace)
         show_fatal_error(details=stacktrace)

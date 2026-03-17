@@ -1,3 +1,4 @@
+import re
 import sys
 import traceback
 from logging import WARNING, getLogger
@@ -302,13 +303,9 @@ class DynamicQuery(QObject):
             self.api = WebAPI(self.apikey, format="json", https=True)
         except Exception as e:
             self.api = None
-            # Catch exceptions that can potentially leak Steam API key
+            # Redact any Steam API keys that may appear in URLs within the stacktrace
             stacktrace = traceback.format_exc()
-            pattern = "&key="
-            if pattern in stacktrace:
-                stacktrace = stacktrace[
-                    : len(stacktrace) - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
-                ]  # If an HTTPError/SSLError from steam/urllib3 module(s) somehow is uncaught, try to remove the Steam API key from the stacktrace
+            stacktrace = re.sub(r"[?&]key=[^&\s\"']+", "key=[REDACTED]", stacktrace)
             logger.warning(f"Dynamic Query received an uncaught exception: {e.__class__.__name__}")
             self._emit_message(
                 "\nDynamicQuery failed to initialize WebAPI query!"
@@ -532,15 +529,8 @@ class DynamicQuery(QObject):
                                         missing_children.append(child_pfid)
             except Exception as e:
                 stacktrace = traceback.format_exc()
-                if (
-                    e.__class__.__name__ == "HTTPError" or e.__class__.__name__ == "SSLError"
-                ):  # requests.exceptions.HTTPError OR urllib3.exceptions.SSLError
-                    # If an HTTPError from steam/urllib3 module(s) somehow is uncaught,
-                    # try to remove the Steam API key from the stacktrace
-                    pattern = "&key="
-                    stacktrace = stacktrace[
-                        : len(stacktrace) - (len(stacktrace) - (stacktrace.find(pattern) + len(pattern)))
-                    ]
+                # Redact any Steam API keys that may appear in URLs within the stacktrace
+                stacktrace = re.sub(r"[?&]key=[^&\s\"']+", "key=[REDACTED]", stacktrace)
                 logger.error(
                     f"IPublishedFileService/GetDetails errored querying batch [{chunks_processed}/{total}]: {stacktrace}"
                 )
