@@ -73,15 +73,14 @@ def handle_exception(
     if issubclass(exc_type, KeyboardInterrupt):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
     else:  # Anything else, we want to log an error and notify the user
-        logger.error(
-            "The main application loop has failed with an uncaught exception",
-            exc_info=(exc_type, exc_value, exc_traceback),
-        )
+        details = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+        details = re.sub(r"([?&])key=[^&\s\"']+", r"\1key=[REDACTED]", details)
+        logger.error(f"The main application loop has failed with an uncaught exception:\n{details}")
         show_fatal_error(
             title="RimSort crashed",
             text="The RimSort application crashed! Sorry for the inconvenience!",
             information="Please contact us on the Discord/Github to report the issue.",
-            details="".join(traceback.format_exception(exc_type, exc_value, exc_traceback)),
+            details=details,
         )
 
     sys.exit()
@@ -115,7 +114,7 @@ def main_thread() -> None:
         else:
             stacktrace = traceback.format_exc()
             # Redact any Steam API keys that may appear in URLs within the stacktrace
-            stacktrace = re.sub(r"[?&]key=[^&\s\"']+", "key=[REDACTED]", stacktrace)
+            stacktrace = re.sub(r"([?&])key=[^&\s\"']+", r"\1key=[REDACTED]", stacktrace)
         logger.error("The main application instantiation has failed with an uncaught exception:")
         logger.error(stacktrace)
         show_fatal_error(details=stacktrace)
@@ -150,10 +149,10 @@ if __name__ == "__main__":
             cli()
         except Exception as e:
             # Handle CLI errors without Qt dialogs
-            import traceback
-
+            tb = traceback.format_exc()
+            tb = re.sub(r"([?&])key=[^&\s\"']+", r"\1key=[REDACTED]", tb)
             print(f"Error: {e}", file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
+            print(tb, file=sys.stderr)
             sys.exit(1)
         sys.exit(0)
 
