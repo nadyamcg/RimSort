@@ -40,6 +40,7 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 from app.controllers.settings_controller import SettingsController
+from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.generic import launch_process
 from app.views.dialogue import show_information, show_warning
@@ -1168,7 +1169,7 @@ class PlayerLogTab(QWidget):
             self.progress_bar.setTextVisible(True)
             self.progress_bar.show()
 
-            resp = requests.get(url, timeout=10, stream=True)
+            resp = http.get(url, timeout=10, stream=True)
             resp.raise_for_status()
             total_size = len(resp.content)
             downloaded = 0

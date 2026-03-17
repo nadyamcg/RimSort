@@ -6,6 +6,9 @@ from urllib.parse import urlparse
 
 import requests
 from loguru import logger
+
+from app.utils import http
+from app.utils.http import DEFAULT_TIMEOUT
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QInputDialog, QMessageBox
 
@@ -55,7 +58,7 @@ class HttpClient:
         """
         headers = headers or {}
         request_method = getattr(self.session, method.lower())
-        response = request_method(url, data=data, headers=headers)
+        response = request_method(url, data=data, headers=headers, timeout=DEFAULT_TIMEOUT)
         response.data = response.text  # Store the response text for convenience
         return response
 
@@ -197,11 +200,8 @@ class RentryImport:
         Returns:
             bool: True if the link is valid, False otherwise.
         """
-        try:
-            parsed = urlparse(link)
-            return parsed.scheme == "https" and parsed.hostname == "rentry.co"
-        except Exception:
-            return False
+        parsed = urlparse(link)
+        return parsed.scheme == "https" and parsed.hostname == "rentry.co"
 
     def import_rentry_link(self) -> None:
         """
@@ -226,11 +226,11 @@ class RentryImport:
             if self.rentry_auth_code:
                 logger.debug("Using rentry-auth code to fetch rentry.co content.")
                 raw_url = rentry_link if rentry_link.endswith("/raw") else f"{rentry_link}/raw"
-                response = requests.get(raw_url, headers=_HEADERS, timeout=15)  # Fetch the content from the raw URL
+                response = http.get(raw_url, headers=_HEADERS)  # Fetch the content from the raw URL
             else:
                 logger.debug("Fetching rentry.co content without rentry-auth.")
                 raw_url = rentry_link if rentry_link.endswith("/edit") else f"{rentry_link}/edit"
-                response = requests.get(raw_url, timeout=15)  # Fetch the content from the edit URL
+                response = http.get(raw_url)  # Fetch the content from the edit URL
 
             if response.status_code == 200:
                 # Decode the content using UTF-8
