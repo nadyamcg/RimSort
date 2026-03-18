@@ -6,13 +6,12 @@ from urllib.parse import urlparse
 
 import requests
 from loguru import logger
-
-from app.utils import http
-from app.utils.http import DEFAULT_TIMEOUT
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QInputDialog, QMessageBox
 
 from app.controllers.settings_controller import SettingsController
+from app.utils import http
+from app.utils.http import DEFAULT_TIMEOUT
 from app.views.dialogue import (
     InformationBox,
     show_fatal_error,

@@ -17,12 +17,11 @@ from typing import TYPE_CHECKING, Any, Callable, Generator
 import requests
 import vdf  # type: ignore
 from loguru import logger
-
-from app.utils import http
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 
 import app.views.dialogue as dialogue
+from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.launch_command_parser import parse_launch_command
 

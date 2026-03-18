@@ -12,7 +12,6 @@ from tempfile import gettempdir
 from typing import Any, Callable, Literal, Optional, cast, overload
 from urllib.parse import urlparse
 
-import requests
 from loguru import logger
 from PySide6.QtCore import (
     QEventLoop,

@@ -1,4 +1,3 @@
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 from app.utils.http import DEFAULT_TIMEOUT, get, head, post

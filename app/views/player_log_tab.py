@@ -6,7 +6,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable, Deque, List, Optional, Tuple
 
-import requests
 from loguru import logger
 from PySide6.QtCore import QObject, QPoint, QRegularExpression, Qt, QTimer, Signal
 from PySide6.QtGui import (

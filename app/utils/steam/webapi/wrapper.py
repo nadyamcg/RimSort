@@ -10,12 +10,11 @@ from urllib.parse import urlparse
 
 import requests
 from loguru import logger
-
-from app.utils import http
 from PySide6.QtCore import QCoreApplication, QObject, Signal
 from PySide6.QtWidgets import QInputDialog
 from steam.webapi import WebAPI
 
+from app.utils import http
 from app.utils.app_info import AppInfo
 from app.utils.constants import RIMWORLD_DLC_METADATA
 from app.utils.generic import chunks
