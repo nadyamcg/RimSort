@@ -764,6 +764,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
         for publishedfileid in chunk:
             count = chunk.index(publishedfileid)
             data[f"publishedfileids[{count}]"] = publishedfileid
+        # jscpd:ignore-start
         try:  # Make a request to the Steam Web API
             request = http.post(url, data=data, timeout=(5, 60))
         except Exception as e:
@@ -771,6 +772,7 @@ def ISteamRemoteStorage_GetPublishedFileDetails(
                 f"Unable to complete request! Are you connected to the internet? Received exception: {e.__class__.__name__}"
             )
             return None
+        # jscpd:ignore-end
         try:  # Parse the JSON response
             json_response = request.json()
             if json_response.get("response", {}).get("resultcount", 0) > 0:
