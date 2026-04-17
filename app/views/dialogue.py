@@ -140,6 +140,15 @@ def show_dialogue_file(
     return str(Path(os.path.normpath(path)).resolve()) if path != "" else None
 
 
+def show_dialogue_files(
+    caption: str = "",
+    _dir: str = "",
+    _filter: str = "",
+) -> list[str]:
+    paths, _ = QFileDialog.getOpenFileNames(caption=caption, dir=_dir, filter=_filter)
+    return [str(Path(os.path.normpath(p)).resolve()) for p in paths if p != ""]
+
+
 # jscpd:ignore-start
 def show_information(
     title: str | None = None,

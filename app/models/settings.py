@@ -186,6 +186,7 @@ class Settings(QObject):
         self.rentry_auth_code: str = ""
         self.github_username: str = ""
         self.github_token: str = ""
+        self.last_zip_import_dir: str = ""
 
         # Auxiliary Metadata DB
         self.enable_aux_db_behavior_editing: bool = False

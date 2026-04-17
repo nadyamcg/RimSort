@@ -164,6 +164,12 @@ bin/
 lib64
 pyvenv.cfg
 
+# Arch packaging artifacts
+packaging/arch/src/
+packaging/arch/pkg/
+packaging/arch/*.tar.gz
+packaging/arch/*.tar.zst
+
 # RimSort
 DEBUG
 .DS_Store

@@ -1,0 +1,103 @@
+# maintainer: Nadezhda Vyazova <nadyamcg@proton.me>
+pkgname=rimsort
+pkgver=1.0.76
+pkgrel=1
+pkgdesc="Open source mod manager for RimWorld"
+arch=('x86_64')
+url="https://github.com/RimSort/RimSort"
+license=('GPL-3.0-only')
+depends=('glibc' 'gcc-libs')
+makedepends=('uv' 'gcc' 'patchelf' 'desktop-file-utils')
+optdepends=('ccache: faster recompilation if rebuilding')
+
+# submodule commit SHAs for v${pkgver}
+_steamworkspy_commit=7b35e08ed33055b15e6581fce7fc65da3e3e3e53
+_steamfiles_commit=18bb08d5ff8b0e36d4cc14453deaf58d721339e4
+
+source=(
+    "${pkgname}-${pkgver}.tar.gz::https://github.com/RimSort/RimSort/archive/v${pkgver}.tar.gz"
+    "SteamworksPy-${_steamworkspy_commit}.tar.gz::https://github.com/RimSort/SteamworksPy/archive/${_steamworkspy_commit}.tar.gz"
+    "steamfiles-${_steamfiles_commit}.tar.gz::https://github.com/RimSort/steamfiles/archive/${_steamfiles_commit}.tar.gz"
+)
+sha256sums=('SKIP' 'SKIP' 'SKIP')
+# run `updpkgsums` to replace SKIP with real checksums before submitting to AUR
+
+prepare() {
+    cd "RimSort-${pkgver}"
+
+    # place submodules where the build expects them
+    mkdir -p submodules
+    rm -rf submodules/SteamworksPy submodules/steamfiles
+    mv "${srcdir}/SteamworksPy-${_steamworkspy_commit}" submodules/SteamworksPy
+    mv "${srcdir}/steamfiles-${_steamfiles_commit}" submodules/steamfiles
+
+    cat > version.xml << EOF
+<version>
+  <version>${pkgver}</version>
+  <major>$(echo "${pkgver}" | cut -d. -f1)</major>
+  <minor>$(echo "${pkgver}" | cut -d. -f2)</minor>
+  <patch>$(echo "${pkgver}" | cut -d. -f3)</patch>
+  <increment>1</increment>
+  <commit>unknown</commit>
+  <tag>v${pkgver}</tag>
+</version>
+EOF
+}
+
+build() {
+    cd "RimSort-${pkgver}"
+
+    export PYTHONPATH="${srcdir}/RimSort-${pkgver}/submodules/SteamworksPy"
+
+    # install Python deps (including nuitka) into the project venv
+    uv sync --locked --no-dev --group build
+
+    # build standalone binary via Nuitka.
+    # --skip-submodules: submodules are placed manually above.
+    # --skip-todds: avoids a network fetch during build; install todds separately if wanted.
+    uv run --frozen python distribute.py \
+        --product-version="${pkgver}.1" \
+        --skip-submodules \
+        --skip-todds
+}
+
+package() {
+    cd "RimSort-${pkgver}"
+
+    install -d "${pkgdir}/usr/bin"
+    install -d "${pkgdir}/usr/share/${pkgname}"
+    install -d "${pkgdir}/usr/share/applications"
+    install -d "${pkgdir}/usr/share/metainfo"
+    install -d "${pkgdir}/usr/share/icons/hicolor/256x256/apps"
+
+    # standalone Nuitka build output
+    cp -pr build/app.dist/. "${pkgdir}/usr/share/${pkgname}/"
+
+    # copy the full set of Qt libs from PySide6's own bundle
+    # so every Qt component is the same version.
+    _pyside6_qtlib=$(find "${srcdir}/RimSort-${pkgver}/.venv" \
+        -path "*/PySide6/Qt/lib" -type d | head -1)
+    cp "${_pyside6_qtlib}"/libQt6*.so.6 "${pkgdir}/usr/share/${pkgname}/"
+
+    # launcher wrapper
+    install -Dm 755 /dev/stdin "${pkgdir}/usr/bin/${pkgname}" << 'WRAPPER'
+#!/bin/bash
+export RIMSORT_DISABLE_UPDATER=1
+exec /usr/share/rimsort/RimSort "$@"
+WRAPPER
+
+    # desktop integration
+    desktop-file-install \
+        --dir="${pkgdir}/usr/share/applications" \
+        --set-key=Exec --set-value=rimsort \
+        data/io.github.rimsort.RimSort.desktop
+
+    install -Dm 644 data/io.github.rimsort.RimSort.metainfo.xml \
+        "${pkgdir}/usr/share/metainfo/io.github.rimsort.RimSort.metainfo.xml"
+
+    install -Dm 644 themes/default-icons/AppIcon_a.png \
+        "${pkgdir}/usr/share/icons/hicolor/256x256/apps/io.github.rimsort.RimSort.png"
+
+    install -Dm 644 LICENSE.md \
+        "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

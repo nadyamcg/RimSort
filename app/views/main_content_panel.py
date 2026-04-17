@@ -2355,14 +2355,18 @@ class MainContent(QObject):
                 self.mod_info_panel.info_panel_frame.show()
                 self.disable_enable_widgets_signal.emit(True)
         elif answer == "Select from local":
-            file_path = dialogue.show_dialogue_file(
-                mode="open",
-                caption="Choose Zip File",
-                _dir=str(AppInfo().app_storage_folder),
+            settings = self.settings_controller.settings
+            last_dir = settings.last_zip_import_dir or str(AppInfo().app_storage_folder)
+            file_paths = dialogue.show_dialogue_files(
+                caption="Choose Zip File(s)",
+                _dir=last_dir,
                 _filter="Zip file (*.zip)",
             )
-            if file_path:
-                self._extract_zip_file(file_path)
+            if file_paths:
+                settings.last_zip_import_dir = str(Path(file_paths[0]).parent)
+                self.settings_controller.settings.save()
+                for file_path in file_paths:
+                    self._extract_zip_file(file_path)
 
     def _extract_zip_file(self, file_path: str, delete: bool = False) -> None:
         logger.info(f"Selected path: {file_path}")
