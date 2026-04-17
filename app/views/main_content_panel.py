@@ -280,6 +280,9 @@ class MainContent(QObject):
 
             # Progress widget for extraction operations
             self._extract_progress_widget: Optional[TaskProgressWindow] = None
+            self._extract_queue: list[tuple[str, bool]] = []
+            self._extract_success_count: int = 0
+            self._extract_fail_count: int = 0
 
             logger.info("Finished MainContent initialization")
             self.initialized = True
@@ -2365,8 +2368,10 @@ class MainContent(QObject):
             if file_paths:
                 settings.last_zip_import_dir = str(Path(file_paths[0]).parent)
                 self.settings_controller.settings.save()
-                for file_path in file_paths:
-                    self._extract_zip_file(file_path)
+                self._extract_queue = [(p, False) for p in file_paths[1:]]
+                self._extract_success_count = 0
+                self._extract_fail_count = 0
+                self._extract_zip_file(file_paths[0])
 
     def _extract_zip_file(self, file_path: str, delete: bool = False) -> None:
         logger.info(f"Selected path: {file_path}")
@@ -2487,15 +2492,30 @@ class MainContent(QObject):
 
     def _on_extract_finished(self, success: bool, message: str) -> None:
         """Handle extraction completion."""
-        try:
-            # Clean up progress widget
-            if hasattr(self, "_extract_progress_widget") and self._extract_progress_widget:
-                self.mod_info_panel.panel.removeWidget(self._extract_progress_widget)
-                self._extract_progress_widget.close()
-                self._extract_progress_widget = None
+        if success:
+            self._extract_success_count += 1
+        else:
+            self._extract_fail_count += 1
 
-            # Show completion dialog
-            if success:
+        # Clean up progress widget
+        if hasattr(self, "_extract_progress_widget") and self._extract_progress_widget:
+            self.mod_info_panel.panel.removeWidget(self._extract_progress_widget)
+            self._extract_progress_widget.close()
+            self._extract_progress_widget = None
+
+        # Start next queued extraction if any
+        if self._extract_queue:
+            next_path, next_delete = self._extract_queue.pop(0)
+            self._extract_zip_file(next_path, delete=next_delete)
+            return
+
+        # All done — restore panel and show summary
+        self.mod_info_panel.info_panel_frame.show()
+        self.disable_enable_widgets_signal.emit(True)
+
+        total = self._extract_success_count + self._extract_fail_count
+        if total == 1:
+            if self._extract_success_count:
                 dialogue.show_information(
                     title=self.tr("Extraction completed"),
                     text=self.tr("The ZIP file was successfully extracted!"),
@@ -2507,11 +2527,19 @@ class MainContent(QObject):
                     text=self.tr("An error occurred during extraction."),
                     information=message,
                 )
-
-        finally:
-            # Always restore mod info panel (like download does)
-            self.mod_info_panel.info_panel_frame.show()
-            self.disable_enable_widgets_signal.emit(True)
+        else:
+            if self._extract_fail_count == 0:
+                dialogue.show_information(
+                    title=self.tr("Extraction completed"),
+                    text=self.tr("{n} ZIP files successfully extracted.").format(n=total),
+                )
+            else:
+                dialogue.show_warning(
+                    title=self.tr("Extraction completed with errors"),
+                    text=self.tr("{ok} of {total} ZIP files extracted successfully, {fail} failed.").format(
+                        ok=self._extract_success_count, total=total, fail=self._extract_fail_count
+                    ),
+                )
 
     def _do_notify_no_git(self) -> None:
         answer = dialogue.show_dialogue_conditional(  # We import last so we can use gui + utils
