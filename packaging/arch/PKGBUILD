@@ -4,7 +4,7 @@ pkgver=1.0.76
 pkgrel=1
 pkgdesc="Open source mod manager for RimWorld"
 arch=('x86_64')
-url="https://github.com/RimSort/RimSort"
+url="https://github.com/nadyamcg/RimSort"
 license=('GPL-3.0-only')
 depends=('glibc' 'gcc-libs')
 makedepends=('uv' 'gcc' 'patchelf' 'desktop-file-utils')
@@ -15,7 +15,7 @@ _steamworkspy_commit=7b35e08ed33055b15e6581fce7fc65da3e3e3e53
 _steamfiles_commit=18bb08d5ff8b0e36d4cc14453deaf58d721339e4
 
 source=(
-    "${pkgname}-${pkgver}.tar.gz::https://github.com/RimSort/RimSort/archive/v${pkgver}.tar.gz"
+    "${pkgname}-${pkgver}.tar.gz::https://github.com/nadyamcg/RimSort/archive/v${pkgver}.tar.gz"
     "SteamworksPy-${_steamworkspy_commit}.tar.gz::https://github.com/RimSort/SteamworksPy/archive/${_steamworkspy_commit}.tar.gz"
     "steamfiles-${_steamfiles_commit}.tar.gz::https://github.com/RimSort/steamfiles/archive/${_steamfiles_commit}.tar.gz"
 )
